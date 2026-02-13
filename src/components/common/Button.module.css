@@ -1,0 +1,59 @@
+.button {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+/* Teal/mint — primary actions like "Add Expense" */
+.primary {
+  background-color: var(--color-primary);
+  color: #0a0e1a;
+}
+
+.primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Red — destructive actions like "Delete" */
+.danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.danger:hover {
+  background-color: #ef4444;
+}
+
+/* Green — income-related actions */
+.success {
+  background-color: var(--color-success);
+  color: #0a0e1a;
+}
+
+.success:hover {
+  background-color: #4ade80;
+}
+
+/* Ghost — subtle, transparent button for secondary actions */
+.ghost {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.ghost:hover {
+  background: var(--color-surface-hover);
+}

@@ -1,0 +1,31 @@
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon:hover {
+  background: var(--color-surface-hover);
+  transform: scale(1.1);
+}
+
+/* Highlight the currently selected icon */
+.selected {
+  border-color: var(--color-primary);
+  background: rgba(45, 212, 191, 0.15);
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+}

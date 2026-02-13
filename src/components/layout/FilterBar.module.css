@@ -1,0 +1,25 @@
+.bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* Preset date range buttons row */
+.presets {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Custom from/to date inputs */
+.customRange {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Category dropdown */
+.filter {
+  min-width: 180px;
+  max-width: 250px;
+}

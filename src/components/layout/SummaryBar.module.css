@@ -1,0 +1,18 @@
+/* 5 stat cards in a responsive horizontal row */
+.bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .bar {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

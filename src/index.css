@@ -1,0 +1,130 @@
+/*
+ * BreadWinner — Global styles and CSS custom properties.
+ *
+ * Dark glassmorphism theme. Every component references these variables
+ * via var(--color-*), so the entire app's look flows from here.
+ */
+
+:root {
+  /* Background & surfaces — deep navy with transparent glass layers */
+  --color-bg: #0a0e1a;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-glass-blur: 12px;
+
+  /* Text */
+  --color-text: #e8eaed;
+  --color-text-muted: #8b92a5;
+
+  /* Accents — teal/mint for primary actions */
+  --color-primary: #2dd4bf;
+  --color-primary-hover: #5eead4;
+
+  /* Semantic colors */
+  --color-income: #34d399;
+  --color-expense: #f87171;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-success: #34d399;
+
+  /* Header gradient (warm golden → coral) */
+  --gradient-header: linear-gradient(135deg, #fdcb6e, #e17055, #FF6B6B);
+
+  /* Fonts */
+  --font-heading: 'Outfit', 'Segoe UI', sans-serif;
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 40px rgba(45, 212, 191, 0.05);
+
+  /* Select option background — needs explicit override per theme */
+  --color-option-bg: #1a1f2e;
+}
+
+/* --- Light theme overrides --- */
+[data-theme="light"] {
+  --color-bg: #f5f5f7;
+  --color-surface: rgba(255, 255, 255, 0.75);
+  --color-surface-hover: rgba(255, 255, 255, 0.9);
+  --color-border: rgba(0, 0, 0, 0.1);
+
+  --color-text: #1a1a2e;
+  --color-text-muted: #6b7280;
+
+  --color-primary: #0d9488;
+  --color-primary-hover: #14b8a6;
+
+  --color-income: #059669;
+  --color-expense: #dc2626;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-success: #059669;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 40px rgba(13, 148, 136, 0.05);
+
+  --color-option-bg: #ffffff;
+}
+
+/* Reset & base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Subtle radial glow in the background for depth */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(45, 212, 191, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(253, 203, 110, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+}
+
+/* Smooth scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Light theme: body background gradients */
+[data-theme="light"] body {
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(13, 148, 136, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(253, 203, 110, 0.04) 0%, transparent 50%);
+}
+
+/* Light theme: scrollbar colors */
+html[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}

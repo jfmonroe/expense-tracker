@@ -1,0 +1,76 @@
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .summaryRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-text);
+}
+
+.table tbody tr:hover {
+  background: var(--color-surface-hover);
+}
+
+.typeIncome {
+  color: var(--color-income);
+  font-weight: 600;
+}
+
+.typeExpense {
+  color: var(--color-expense);
+  font-weight: 600;
+}
+
+.amountIncome {
+  color: var(--color-income);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.amountExpense {
+  color: var(--color-expense);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 2rem 0;
+}

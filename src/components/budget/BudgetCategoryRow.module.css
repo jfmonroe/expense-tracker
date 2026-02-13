@@ -1,0 +1,75 @@
+.row {
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+/* Red border glow when over budget */
+.overBudget {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.categoryName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.limitInput {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dollar {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.input {
+  width: 100px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  text-align: right;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.spent {
+  color: var(--color-text-muted);
+}
+
+.remaining {
+  color: var(--color-income);
+}
+
+.over {
+  color: var(--color-danger);
+  font-weight: 700;
+}
