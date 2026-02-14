@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 
-import { DATE_RANGE_PRESETS } from "../utils/formatters";
+import { DATE_RANGE_PRESETS, getTodayISO } from "../utils/formatters";
 
 /**
  * AppContext is the central state store for BreadWinner.
@@ -101,6 +101,112 @@ export const AppProvider = ({ children }) => {
       console.warn("BreadWinner: Could not save to localStorage.");
     }
   }, [transactions, budgets, savingsGoals]);
+
+  // Auto-generate recurring transaction entries
+  useEffect(() => {
+    const generateRecurringEntries = () => {
+      const today = new Date();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
+      
+      // Find all recurring transactions
+      const recurringTransactions = transactions.filter(
+        (t) => t.recurring !== "one-time"
+      );
+
+      const newEntries = [];
+
+      recurringTransactions.forEach((template) => {
+        const templateDate = new Date(template.date + 'T00:00:00');
+        const templateYear = templateDate.getFullYear();
+        const templateMonth = templateDate.getMonth() + 1;
+        
+        // Calculate how many periods have passed since the original date
+        let periodsToGenerate = [];
+        
+        if (template.recurring === "monthly") {
+          // Generate entries for each month from template date to current month
+          for (let year = templateYear; year <= currentYear; year++) {
+            const startMonth = year === templateYear ? templateMonth : 1;
+            const endMonth = year === currentYear ? currentMonth : 12;
+            
+            for (let month = startMonth; month <= endMonth; month++) {
+              const entryDate = `${year}-${String(month).padStart(2, "0")}-${String(templateDate.getDate()).padStart(2, "0")}`;
+              
+              // Check if we already have an entry for this period
+              const exists = transactions.some(
+                (t) =>
+                  t.description === template.description &&
+                  t.category === template.category &&
+                  t.amount === template.amount &&
+                  t.date === entryDate
+              );
+              
+              if (!exists && entryDate <= getTodayISO()) {
+                periodsToGenerate.push(entryDate);
+              }
+            }
+          }
+        } else if (template.recurring === "yearly") {
+          // Generate entries for each year
+          for (let year = templateYear; year <= currentYear; year++) {
+            const entryDate = `${year}-${String(templateMonth).padStart(2, "0")}-${String(templateDate.getDate()).padStart(2, "0")}`;
+            
+            const exists = transactions.some(
+              (t) =>
+                t.description === template.description &&
+                t.category === template.category &&
+                t.amount === template.amount &&
+                t.date === entryDate
+            );
+            
+            if (!exists && entryDate <= getTodayISO()) {
+              periodsToGenerate.push(entryDate);
+            }
+          }
+        } else if (template.recurring === "weekly" || template.recurring === "biweekly") {
+          // For weekly/biweekly, generate based on intervals from template date
+          const interval = template.recurring === "weekly" ? 7 : 14;
+          let currentDate = new Date(templateDate);
+          
+          while (currentDate <= today) {
+            const entryDate = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
+            
+            const exists = transactions.some(
+              (t) =>
+                t.description === template.description &&
+                t.category === template.category &&
+                t.amount === template.amount &&
+                t.date === entryDate
+            );
+            
+            if (!exists) {
+              periodsToGenerate.push(entryDate);
+            }
+            
+            currentDate.setDate(currentDate.getDate() + interval);
+          }
+        }
+        
+        // Create new entries for each generated period
+        periodsToGenerate.forEach((date) => {
+          newEntries.push({
+            ...template,
+            id: crypto.randomUUID(),
+            date,
+          });
+        });
+      });
+
+      // Add all new entries at once
+      if (newEntries.length > 0) {
+        setTransactions((prev) => [...prev, ...newEntries]);
+      }
+    };
+
+    // Run on mount and whenever transactions change
+    generateRecurringEntries();
+  }, []); // Only run once on mount to avoid infinite loop
 
   // --- Filtered transactions (by date range and category) ---
   const filteredTransactions = useMemo(() => {
