@@ -32,7 +32,15 @@ const ExpenseForm = () => {
     if (!amount || isNaN(parsed) || parsed <= 0) {
       newErrors.amount = "Amount must be a positive number";
     }
-    if (!date) newErrors.date = "Date is required";
+    if (!date) {
+      newErrors.date = "Date is required";
+    } else {
+      // Validate that the date is actually valid (prevents Feb 31, etc.)
+      const dateObj = new Date(date + 'T00:00:00');
+      if (isNaN(dateObj.getTime())) {
+        newErrors.date = "Invalid date";
+      }
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
