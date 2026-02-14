@@ -14,11 +14,8 @@ import styles from "./Input.module.css";
  * @param {object} rest - Any other props passed through to the <input> or <select>
  */
 const Input = ({ label, error, type = "text", options = [], ...rest }) => {
-  // For date inputs, ensure we have the right attributes to trigger native picker
-  const dateProps = type === "date" ? {
-    pattern: "\\d{4}-\\d{2}-\\d{2}",
-    placeholder: "YYYY-MM-DD"
-  } : {};
+  // For date inputs, ensure we force the native date picker
+  const inputType = type === "date" ? "date" : type;
 
   return (
     <div className={styles.field}>
@@ -40,8 +37,7 @@ const Input = ({ label, error, type = "text", options = [], ...rest }) => {
       ) : (
         <input
           className={`${styles.input} ${error ? styles.inputError : ""}`}
-          type={type}
-          {...dateProps}
+          type={inputType}
           {...rest}
         />
       )}
