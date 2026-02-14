@@ -21,6 +21,24 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* Ensure date inputs show the calendar picker */
+.input[type="date"] {
+  position: relative;
+  min-width: 150px;
+}
+
+/* Make the date picker icon teal/cyan - visible on both light and dark backgrounds */
+.input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.8;
+  filter: brightness(0) saturate(100%) invert(70%) sepia(52%) saturate(1000%) hue-rotate(130deg) brightness(95%) contrast(101%);
+}
+
+.input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(70%) sepia(52%) saturate(1200%) hue-rotate(130deg) brightness(110%) contrast(101%);
+}
+
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
