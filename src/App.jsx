@@ -31,13 +31,11 @@ const App = () => {
   const tabPanels = {
     expenses: (
       <>
-        <ExpenseForm />
         <ExpenseList />
       </>
     ),
     income: (
       <>
-        <IncomeForm />
         <IncomeList />
       </>
     ),
@@ -51,6 +49,10 @@ const App = () => {
     <div className={styles.app}>
       <Header />
       <SummaryBar />
+
+      {/* Add forms above controls for better UX */}
+      {activeTab === "expenses" && <ExpenseForm />}
+      {activeTab === "income" && <IncomeForm />}
 
       <div className={styles.controls}>
         <FilterBar />
