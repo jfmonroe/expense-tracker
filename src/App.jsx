@@ -50,16 +50,20 @@ const App = () => {
       <Header />
       <SummaryBar />
 
-      {/* Add forms above controls for better UX */}
+      {/* Tab navigation at the top */}
+      <TabBar />
+
+      {/* Add forms below tabs */}
       {activeTab === "expenses" && <ExpenseForm />}
       {activeTab === "income" && <IncomeForm />}
 
+      {/* Import/Export below forms */}
+      {(activeTab === "expenses" || activeTab === "income") && <ImportExport />}
+
+      {/* Filter controls */}
       <div className={styles.controls}>
         <FilterBar />
-        <ImportExport />
       </div>
-
-      <TabBar />
 
       <main className={styles.main}>{tabPanels[activeTab]}</main>
     </div>
