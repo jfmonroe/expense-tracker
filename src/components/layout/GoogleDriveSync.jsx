@@ -26,7 +26,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 const GoogleDriveSync = () => {
-  const { transactions, budgets, savingsGoals, importTransactions } = useApp();
+  const { transactions, budgets, savingsGoals, replaceAllData } = useApp();
   const [signedIn, setSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
   const [ready, setReady] = useState(false);
@@ -142,10 +142,8 @@ const GoogleDriveSync = () => {
       }
 
       if (confirmLoad) {
-        // Replace local data with cloud data
-        if (data.transactions) {
-          importTransactions(data.transactions);
-        }
+        // Replace ALL data with cloud data (no duplicates!)
+        replaceAllData(data);
         setLastSync(new Date().toLocaleString());
         if (!silent) {
           alert("Data loaded from Google Drive successfully!");
