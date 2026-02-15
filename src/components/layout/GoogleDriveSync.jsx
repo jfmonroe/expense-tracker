@@ -33,9 +33,16 @@ const GoogleDriveSync = () => {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const isLoadingRef = useRef(false); // Track if we're currently loading from Drive
 
   // Auto-sync: save to Drive when data changes (after 3 second debounce)
   useEffect(() => {
+    // Don't auto-sync if we're currently loading data from Drive
+    if (isLoadingRef.current) {
+      console.log('Auto-sync: skipped (loading from Drive)');
+      return;
+    }
+
     if (!signedIn || !autoSyncEnabled) {
       console.log('Auto-sync disabled:', { signedIn, autoSyncEnabled });
       return;
@@ -134,6 +141,7 @@ const GoogleDriveSync = () => {
 
   /** Load data from Google Drive */
   const handleLoad = async (silent = false) => {
+    isLoadingRef.current = true; // Prevent auto-sync during load
     setSyncing(true);
     try {
       const data = await loadFromGoogleDrive();
@@ -143,6 +151,7 @@ const GoogleDriveSync = () => {
           alert("No data found in Google Drive. Your local data will be saved on next sync.");
         }
         setSyncing(false);
+        isLoadingRef.current = false;
         return;
       }
 
@@ -171,6 +180,11 @@ const GoogleDriveSync = () => {
       console.error("Load error:", error);
     } finally {
       setSyncing(false);
+      // Small delay before re-enabling auto-sync to ensure state has settled
+      setTimeout(() => {
+        isLoadingRef.current = false;
+        console.log('Load complete, auto-sync can resume');
+      }, 1000);
     }
   };
 
