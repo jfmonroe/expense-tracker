@@ -45,8 +45,8 @@ const App = () => {
     savings: <SavingsPanel />,
     dashboard: (
       <>
-        <DashboardPanel />
         <GoogleDriveSync />
+        <DashboardPanel />
       </>
     ),
   };
