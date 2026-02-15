@@ -1,0 +1,190 @@
+import { useState, useEffect } from "react";
+import Button from "../common/Button";
+import Card from "../common/Card";
+import { useApp } from "../../context/AppContext";
+import {
+  initGoogleDrive,
+  signInToGoogle,
+  signOutFromGoogle,
+  isSignedIn,
+  getUserEmail,
+  saveToGoogleDrive,
+  loadFromGoogleDrive,
+} from "../../utils/googleDriveSync";
+import styles from "./GoogleDriveSync.module.css";
+
+/**
+ * GoogleDriveSync provides cloud backup and sync via Google Drive.
+ * 
+ * Users sign in with Google, and their data is saved to their own Drive.
+ * The app developer never has access to the data - complete privacy.
+ */
+
+// Load credentials from environment variables (set in Vercel)
+// See setup instructions in GOOGLE_DRIVE_SETUP.md
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+
+const GoogleDriveSync = () => {
+  const { transactions, budgets, savingsGoals, importTransactions } = useApp();
+  const [signedIn, setSignedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
+  const [ready, setReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+
+  // Initialize Google Drive API on mount
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
+      console.warn("Google Drive sync not configured. Add VITE_GOOGLE_CLIENT_ID and VITE_GOOGLE_API_KEY to Vercel environment variables.");
+      return;
+    }
+
+    initGoogleDrive(GOOGLE_CLIENT_ID, GOOGLE_API_KEY, () => {
+      setReady(true);
+      setSignedIn(isSignedIn());
+      if (isSignedIn()) {
+        getUserEmail().then(setUserEmail);
+      }
+    });
+  }, []);
+
+  /** Sign in to Google */
+  const handleSignIn = async () => {
+    try {
+      await signInToGoogle();
+      setSignedIn(true);
+      const email = await getUserEmail();
+      setUserEmail(email);
+      
+      // Auto-load data after sign in
+      await handleLoad();
+    } catch (error) {
+      alert("Failed to sign in: " + error.message);
+    }
+  };
+
+  /** Sign out from Google */
+  const handleSignOut = () => {
+    signOutFromGoogle();
+    setSignedIn(false);
+    setUserEmail(null);
+    setLastSync(null);
+  };
+
+  /** Save current data to Google Drive */
+  const handleSave = async () => {
+    setSyncing(true);
+    try {
+      const data = { transactions, budgets, savingsGoals };
+      await saveToGoogleDrive(data);
+      setLastSync(new Date().toLocaleString());
+      alert("Data saved to Google Drive successfully!");
+    } catch (error) {
+      alert("Failed to save to Google Drive: " + error.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  /** Load data from Google Drive */
+  const handleLoad = async () => {
+    setSyncing(true);
+    try {
+      const data = await loadFromGoogleDrive();
+      
+      if (!data) {
+        alert("No data found in Google Drive. Your local data will be saved on next sync.");
+        setSyncing(false);
+        return;
+      }
+
+      // Ask user if they want to replace local data
+      const confirmLoad = window.confirm(
+        "Load data from Google Drive? This will replace your current local data.\n\n" +
+        `Cloud has ${data.transactions?.length || 0} transactions.`
+      );
+
+      if (confirmLoad) {
+        // Replace local data with cloud data
+        if (data.transactions) {
+          importTransactions(data.transactions);
+        }
+        setLastSync(new Date().toLocaleString());
+        alert("Data loaded from Google Drive successfully!");
+      }
+    } catch (error) {
+      alert("Failed to load from Google Drive: " + error.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Don't show if not configured
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
+    return null;
+  }
+
+  // Don't show until API is ready
+  if (!ready) {
+    return (
+      <Card title="☁️ Cloud Sync">
+        <p className={styles.loading}>Initializing Google Drive...</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card title="☁️ Cloud Sync">
+      {!signedIn ? (
+        <div className={styles.signedOut}>
+          <p className={styles.description}>
+            Sign in with Google to sync your data across devices.
+            Your data is stored in <strong>your</strong> Google Drive - completely private.
+          </p>
+          <Button onClick={handleSignIn}>
+            Sign in with Google
+          </Button>
+        </div>
+      ) : (
+        <div className={styles.signedIn}>
+          <div className={styles.userInfo}>
+            <p className={styles.email}>✓ Signed in as <strong>{userEmail}</strong></p>
+            {lastSync && (
+              <p className={styles.lastSync}>Last sync: {lastSync}</p>
+            )}
+          </div>
+
+          <div className={styles.actions}>
+            <Button 
+              onClick={handleSave} 
+              disabled={syncing}
+              variant="primary"
+            >
+              {syncing ? "Syncing..." : "💾 Save to Drive"}
+            </Button>
+            <Button 
+              onClick={handleLoad} 
+              disabled={syncing}
+              variant="ghost"
+            >
+              {syncing ? "Loading..." : "📥 Load from Drive"}
+            </Button>
+            <Button 
+              onClick={handleSignOut} 
+              variant="ghost"
+            >
+              Sign Out
+            </Button>
+          </div>
+
+          <p className={styles.tip}>
+            💡 Tip: Save to Drive on one device, then Load on another to sync your data!
+          </p>
+        </div>
+      )}
+    </Card>
+  );
+};
+
+export default GoogleDriveSync;
