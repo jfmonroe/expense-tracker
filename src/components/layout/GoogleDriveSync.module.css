@@ -40,6 +40,13 @@
   margin: 0.25rem 0 0 0;
 }
 
+.syncing {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0 0;
+  font-weight: 600;
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;
