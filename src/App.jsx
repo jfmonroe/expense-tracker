@@ -23,6 +23,7 @@ import BudgetPanel from "./components/budget/BudgetPanel";
 import SavingsPanel from "./components/savings/SavingsPanel";
 import DashboardPanel from "./components/dashboard/DashboardPanel";
 import ImportExport from "./components/layout/ImportExport";
+import GoogleDriveSync from "./components/layout/GoogleDriveSync";
 
 const App = () => {
   const { activeTab } = useApp();
@@ -42,7 +43,12 @@ const App = () => {
     recurring: <RecurringPanel />,
     budget: <BudgetPanel />,
     savings: <SavingsPanel />,
-    dashboard: <DashboardPanel />,
+    dashboard: (
+      <>
+        <DashboardPanel />
+        <GoogleDriveSync />
+      </>
+    ),
   };
 
   return (
