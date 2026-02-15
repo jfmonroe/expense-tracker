@@ -24,9 +24,10 @@ import SavingsPanel from "./components/savings/SavingsPanel";
 import DashboardPanel from "./components/dashboard/DashboardPanel";
 import ImportExport from "./components/layout/ImportExport";
 import GoogleDriveSync from "./components/layout/GoogleDriveSync";
+import EasterEgg from "./components/layout/EasterEgg";
 
 const App = () => {
-  const { activeTab } = useApp();
+  const { activeTab, themeToggleCount } = useApp();
 
   // Map each tab ID to its panel content
   const tabPanels = {
@@ -70,6 +71,9 @@ const App = () => {
       </div>
 
       <main className={styles.main}>{tabPanels[activeTab]}</main>
+
+      {/* Easter egg - shows when theme is toggled */}
+      <EasterEgg trigger={themeToggleCount} />
     </div>
   );
 };
