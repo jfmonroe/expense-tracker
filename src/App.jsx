@@ -43,12 +43,7 @@ const App = () => {
     recurring: <RecurringPanel />,
     budget: <BudgetPanel />,
     savings: <SavingsPanel />,
-    dashboard: (
-      <>
-        <GoogleDriveSync />
-        <DashboardPanel />
-      </>
-    ),
+    dashboard: <DashboardPanel />,
   };
 
   return (
@@ -59,6 +54,9 @@ const App = () => {
       {/* Tab navigation at the top */}
       <TabBar />
 
+      {/* Cloud Sync at very top of Dashboard */}
+      {activeTab === "dashboard" && <GoogleDriveSync />}
+
       {/* Add forms below tabs */}
       {activeTab === "expenses" && <ExpenseForm />}
       {activeTab === "income" && <IncomeForm />}
@@ -68,7 +66,7 @@ const App = () => {
 
       {/* Filter controls */}
       <div className={styles.controls}>
-        <FilterBar />
+        <FilterBar hideCategory={activeTab === "dashboard"} />
       </div>
 
       <main className={styles.main}>{tabPanels[activeTab]}</main>
