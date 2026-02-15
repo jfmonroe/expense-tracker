@@ -72,8 +72,8 @@ const App = () => {
 
       <main className={styles.main}>{tabPanels[activeTab]}</main>
 
-      {/* Easter egg - shows when theme is toggled */}
-      <EasterEgg trigger={themeToggleCount} />
+      {/* Easter egg - shows when theme is toggled or Savings tab clicked */}
+      <EasterEgg trigger={themeToggleCount} activeTab={activeTab} />
     </div>
   );
 };
