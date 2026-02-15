@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Button from "../common/Button";
 import Card from "../common/Card";
 import { useApp } from "../../context/AppContext";
@@ -32,6 +32,27 @@ const GoogleDriveSync = () => {
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
+  const autoSyncEnabled = useRef(false);
+
+  // Auto-sync: save to Drive when data changes (after 3 second debounce)
+  useEffect(() => {
+    if (!signedIn || !autoSyncEnabled.current) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setSyncing(true);
+        const data = { transactions, budgets, savingsGoals };
+        await saveToGoogleDrive(data);
+        setLastSync(new Date().toLocaleString());
+      } catch (error) {
+        console.error("Auto-sync error:", error);
+      } finally {
+        setSyncing(false);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [transactions, budgets, savingsGoals, signedIn]);
 
   // Initialize Google Drive API on mount
   useEffect(() => {
@@ -58,7 +79,10 @@ const GoogleDriveSync = () => {
       setUserEmail(email);
       
       // Auto-load data after sign in
-      await handleLoad();
+      await handleLoad(true); // silent = true, no confirmation needed
+      
+      // Enable auto-sync after loading
+      autoSyncEnabled.current = true;
     } catch (error) {
       alert("Failed to sign in: " + error.message);
     }
@@ -66,6 +90,7 @@ const GoogleDriveSync = () => {
 
   /** Sign out from Google */
   const handleSignOut = () => {
+    autoSyncEnabled.current = false;
     signOutFromGoogle();
     setSignedIn(false);
     setUserEmail(null);
@@ -73,37 +98,48 @@ const GoogleDriveSync = () => {
   };
 
   /** Save current data to Google Drive */
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
     setSyncing(true);
     try {
       const data = { transactions, budgets, savingsGoals };
       await saveToGoogleDrive(data);
       setLastSync(new Date().toLocaleString());
-      alert("Data saved to Google Drive successfully!");
+      if (!silent) {
+        alert("Data saved to Google Drive successfully!");
+      }
     } catch (error) {
-      alert("Failed to save to Google Drive: " + error.message);
+      if (!silent) {
+        alert("Failed to save to Google Drive: " + error.message);
+      }
+      console.error("Auto-sync error:", error);
     } finally {
       setSyncing(false);
     }
   };
 
   /** Load data from Google Drive */
-  const handleLoad = async () => {
+  const handleLoad = async (silent = false) => {
     setSyncing(true);
     try {
       const data = await loadFromGoogleDrive();
       
       if (!data) {
-        alert("No data found in Google Drive. Your local data will be saved on next sync.");
+        if (!silent) {
+          alert("No data found in Google Drive. Your local data will be saved on next sync.");
+        }
         setSyncing(false);
         return;
       }
 
-      // Ask user if they want to replace local data
-      const confirmLoad = window.confirm(
-        "Load data from Google Drive? This will replace your current local data.\n\n" +
-        `Cloud has ${data.transactions?.length || 0} transactions.`
-      );
+      // For manual load, ask user if they want to replace local data
+      // For auto-load (silent), just load it
+      let confirmLoad = true;
+      if (!silent) {
+        confirmLoad = window.confirm(
+          "Load data from Google Drive? This will replace your current local data.\n\n" +
+          `Cloud has ${data.transactions?.length || 0} transactions.`
+        );
+      }
 
       if (confirmLoad) {
         // Replace local data with cloud data
@@ -111,10 +147,15 @@ const GoogleDriveSync = () => {
           importTransactions(data.transactions);
         }
         setLastSync(new Date().toLocaleString());
-        alert("Data loaded from Google Drive successfully!");
+        if (!silent) {
+          alert("Data loaded from Google Drive successfully!");
+        }
       }
     } catch (error) {
-      alert("Failed to load from Google Drive: " + error.message);
+      if (!silent) {
+        alert("Failed to load from Google Drive: " + error.message);
+      }
+      console.error("Load error:", error);
     } finally {
       setSyncing(false);
     }
@@ -150,19 +191,16 @@ const GoogleDriveSync = () => {
         <div className={styles.signedIn}>
           <div className={styles.userInfo}>
             <p className={styles.email}>✓ Signed in as <strong>{userEmail}</strong></p>
-            {lastSync && (
-              <p className={styles.lastSync}>Last sync: {lastSync}</p>
+            {syncing ? (
+              <p className={styles.syncing}>🔄 Syncing...</p>
+            ) : lastSync ? (
+              <p className={styles.lastSync}>✓ Synced: {lastSync}</p>
+            ) : (
+              <p className={styles.lastSync}>Ready to sync</p>
             )}
           </div>
 
           <div className={styles.actions}>
-            <Button 
-              onClick={handleSave} 
-              disabled={syncing}
-              variant="primary"
-            >
-              {syncing ? "Syncing..." : "💾 Save to Drive"}
-            </Button>
             <Button 
               onClick={handleLoad} 
               disabled={syncing}
@@ -179,7 +217,7 @@ const GoogleDriveSync = () => {
           </div>
 
           <p className={styles.tip}>
-            💡 Tip: Save to Drive on one device, then Load on another to sync your data!
+            💡 Your data automatically syncs to Drive. Use "Load from Drive" to pull data from another device.
           </p>
         </div>
       )}
