@@ -302,6 +302,13 @@ export const AppProvider = ({ children }) => {
     setTransactions((prev) => [...prev, ...newTransactions]);
   };
 
+  // --- Replace all data (for Google Drive sync) ---
+  const replaceAllData = (data) => {
+    if (data.transactions) setTransactions(data.transactions);
+    if (data.budgets) setBudgets(data.budgets);
+    if (data.savingsGoals) setSavingsGoals(data.savingsGoals);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -316,6 +323,7 @@ export const AppProvider = ({ children }) => {
         updateTransaction,
         deleteTransaction,
         importTransactions,
+        replaceAllData,
 
         // Budget actions
         setBudgetLimit,
