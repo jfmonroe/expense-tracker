@@ -9,12 +9,12 @@ import styles from "./TabBar.module.css";
  */
 
 const TABS = [
+  { id: "dashboard", label: "Dashboard", icon: "\u{1F4C8}" },
   { id: "expenses", label: "Expenses", icon: "\u{1F4B8}" },
   { id: "income", label: "Income", icon: "\u{1F4B0}" },
   { id: "recurring", label: "Recurring", icon: "\u{1F504}" },
   { id: "budget", label: "Budget", icon: "\u{1F4CA}" },
   { id: "savings", label: "Savings", icon: "\u{1F3AF}" },
-  { id: "dashboard", label: "Dashboard", icon: "\u{1F4C8}" },
 ];
 
 const TabBar = () => {
