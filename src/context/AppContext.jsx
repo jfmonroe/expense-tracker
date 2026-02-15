@@ -77,7 +77,7 @@ export const AppProvider = ({ children }) => {
   );
 
   // Tab navigation
-  const [activeTab, setActiveTab] = useState("expenses");
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Apply theme to the document root and persist to localStorage
   useEffect(() => {
