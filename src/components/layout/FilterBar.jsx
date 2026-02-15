@@ -16,7 +16,7 @@ import styles from "./FilterBar.module.css";
  * Custom From/To date inputs give full control and clear the active preset.
  * The category list adapts to the active tab.
  */
-const FilterBar = () => {
+const FilterBar = ({ hideCategory = false }) => {
   const {
     dateRange,
     activePreset,
@@ -84,16 +84,18 @@ const FilterBar = () => {
         />
       </div>
 
-      {/* Category filter */}
-      <div className={styles.filter}>
-        <Input
-          label="Category"
-          type="select"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          options={categoryOptions}
-        />
-      </div>
+      {/* Category filter - hide on Dashboard tab */}
+      {!hideCategory && (
+        <div className={styles.filter}>
+          <Input
+            label="Category"
+            type="select"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            options={categoryOptions}
+          />
+        </div>
+      )}
     </div>
   );
 };
