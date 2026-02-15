@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./EasterEgg.module.css";
+import woodMeme from "/wood-meme.png";
 
 /**
  * EasterEgg - A hidden surprise for your friends 😏
@@ -27,7 +28,7 @@ const EasterEgg = ({ trigger }) => {
           ✕
         </button>
         <img 
-          src="/wood-meme.png" 
+          src={woodMeme} 
           alt="Surprise!" 
           className={styles.image}
         />
