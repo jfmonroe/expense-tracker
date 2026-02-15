@@ -1,190 +1,233 @@
-import { useState, useEffect } from "react";
-import Button from "../common/Button";
-import Card from "../common/Card";
-import { useApp } from "../../context/AppContext";
-import {
-  initGoogleDrive,
-  signInToGoogle,
-  signOutFromGoogle,
-  isSignedIn,
-  getUserEmail,
-  saveToGoogleDrive,
-  loadFromGoogleDrive,
-} from "../../utils/googleDriveSync";
-import styles from "./GoogleDriveSync.module.css";
-
 /**
- * GoogleDriveSync provides cloud backup and sync via Google Drive.
+ * Google Drive sync utilities for BreadWinner.
  * 
- * Users sign in with Google, and their data is saved to their own Drive.
- * The app developer never has access to the data - complete privacy.
+ * Saves user data to their own Google Drive account for cross-device sync.
+ * The developer never has access to user data - it stays in the user's Drive.
  */
 
-// Load credentials from environment variables (set in Vercel)
-// See setup instructions in GOOGLE_DRIVE_SETUP.md
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const FILE_NAME = 'breadwinner-data.json';
 
-const GoogleDriveSync = () => {
-  const { transactions, budgets, savingsGoals, importTransactions } = useApp();
-  const [signedIn, setSignedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState(null);
-  const [ready, setReady] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState(null);
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 
-  // Initialize Google Drive API on mount
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
-      console.warn("Google Drive sync not configured. Add VITE_GOOGLE_CLIENT_ID and VITE_GOOGLE_API_KEY to Vercel environment variables.");
-      return;
-    }
-
-    initGoogleDrive(GOOGLE_CLIENT_ID, GOOGLE_API_KEY, () => {
-      setReady(true);
-      setSignedIn(isSignedIn());
-      if (isSignedIn()) {
-        getUserEmail().then(setUserEmail);
-      }
+/**
+ * Initialize the Google API client.
+ * Call this on app startup with your Google Cloud credentials.
+ */
+export const initGoogleDrive = (clientId, apiKey, callback) => {
+  // Load the Google API library
+  const gapiScript = document.createElement('script');
+  gapiScript.src = 'https://apis.google.com/js/api.js';
+  gapiScript.onload = () => {
+    window.gapi.load('client', async () => {
+      await window.gapi.client.init({
+        apiKey: apiKey,
+        discoveryDocs: [DISCOVERY_DOC],
+      });
+      gapiInited = true;
+      maybeEnableButtons(callback);
     });
-  }, []);
-
-  /** Sign in to Google */
-  const handleSignIn = async () => {
-    try {
-      await signInToGoogle();
-      setSignedIn(true);
-      const email = await getUserEmail();
-      setUserEmail(email);
-      
-      // Auto-load data after sign in
-      await handleLoad();
-    } catch (error) {
-      alert("Failed to sign in: " + error.message);
-    }
   };
+  document.body.appendChild(gapiScript);
 
-  /** Sign out from Google */
-  const handleSignOut = () => {
-    signOutFromGoogle();
-    setSignedIn(false);
-    setUserEmail(null);
-    setLastSync(null);
+  // Load the Google Identity Services library
+  const gisScript = document.createElement('script');
+  gisScript.src = 'https://accounts.google.com/gsi/client';
+  gisScript.onload = () => {
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: '', // defined later
+    });
+    gisInited = true;
+    maybeEnableButtons(callback);
   };
-
-  /** Save current data to Google Drive */
-  const handleSave = async () => {
-    setSyncing(true);
-    try {
-      const data = { transactions, budgets, savingsGoals };
-      await saveToGoogleDrive(data);
-      setLastSync(new Date().toLocaleString());
-      alert("Data saved to Google Drive successfully!");
-    } catch (error) {
-      alert("Failed to save to Google Drive: " + error.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  /** Load data from Google Drive */
-  const handleLoad = async () => {
-    setSyncing(true);
-    try {
-      const data = await loadFromGoogleDrive();
-      
-      if (!data) {
-        alert("No data found in Google Drive. Your local data will be saved on next sync.");
-        setSyncing(false);
-        return;
-      }
-
-      // Ask user if they want to replace local data
-      const confirmLoad = window.confirm(
-        "Load data from Google Drive? This will replace your current local data.\n\n" +
-        `Cloud has ${data.transactions?.length || 0} transactions.`
-      );
-
-      if (confirmLoad) {
-        // Replace local data with cloud data
-        if (data.transactions) {
-          importTransactions(data.transactions);
-        }
-        setLastSync(new Date().toLocaleString());
-        alert("Data loaded from Google Drive successfully!");
-      }
-    } catch (error) {
-      alert("Failed to load from Google Drive: " + error.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // Don't show if not configured
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_API_KEY) {
-    return null;
-  }
-
-  // Don't show until API is ready
-  if (!ready) {
-    return (
-      <Card title="☁️ Cloud Sync">
-        <p className={styles.loading}>Initializing Google Drive...</p>
-      </Card>
-    );
-  }
-
-  return (
-    <Card title="☁️ Cloud Sync">
-      {!signedIn ? (
-        <div className={styles.signedOut}>
-          <p className={styles.description}>
-            Sign in with Google to sync your data across devices.
-            Your data is stored in <strong>your</strong> Google Drive - completely private.
-          </p>
-          <Button onClick={handleSignIn}>
-            Sign in with Google
-          </Button>
-        </div>
-      ) : (
-        <div className={styles.signedIn}>
-          <div className={styles.userInfo}>
-            <p className={styles.email}>✓ Signed in as <strong>{userEmail}</strong></p>
-            {lastSync && (
-              <p className={styles.lastSync}>Last sync: {lastSync}</p>
-            )}
-          </div>
-
-          <div className={styles.actions}>
-            <Button 
-              onClick={handleSave} 
-              disabled={syncing}
-              variant="primary"
-            >
-              {syncing ? "Syncing..." : "💾 Save to Drive"}
-            </Button>
-            <Button 
-              onClick={handleLoad} 
-              disabled={syncing}
-              variant="ghost"
-            >
-              {syncing ? "Loading..." : "📥 Load from Drive"}
-            </Button>
-            <Button 
-              onClick={handleSignOut} 
-              variant="ghost"
-            >
-              Sign Out
-            </Button>
-          </div>
-
-          <p className={styles.tip}>
-            💡 Tip: Save to Drive on one device, then Load on another to sync your data!
-          </p>
-        </div>
-      )}
-    </Card>
-  );
+  document.body.appendChild(gisScript);
 };
 
-export default GoogleDriveSync;
+function maybeEnableButtons(callback) {
+  if (gapiInited && gisInited && callback) {
+    callback();
+  }
+}
+
+/**
+ * Sign in to Google and request Drive access.
+ * Returns a promise that resolves when signed in.
+ */
+export const signInToGoogle = () => {
+  return new Promise((resolve, reject) => {
+    tokenClient.callback = async (resp) => {
+      if (resp.error !== undefined) {
+        reject(resp);
+        return;
+      }
+      resolve(resp);
+    };
+
+    if (window.gapi.client.getToken() === null) {
+      // Prompt the user to select a Google Account and consent
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+      // Skip display of account chooser if already signed in
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  });
+};
+
+/**
+ * Sign out from Google.
+ */
+export const signOutFromGoogle = () => {
+  const token = window.gapi.client.getToken();
+  if (token !== null) {
+    window.google.accounts.oauth2.revoke(token.access_token);
+    window.gapi.client.setToken('');
+  }
+};
+
+/**
+ * Check if user is currently signed in.
+ */
+export const isSignedIn = () => {
+  return window.gapi?.client?.getToken() !== null;
+};
+
+/**
+ * Get the signed-in user's email.
+ */
+export const getUserEmail = async () => {
+  try {
+    const token = window.gapi.client.getToken();
+    if (!token) return null;
+    
+    const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+      headers: { Authorization: `Bearer ${token.access_token}` }
+    });
+    const data = await response.json();
+    return data.email;
+  } catch (error) {
+    console.error('Error getting user email:', error);
+    return null;
+  }
+};
+
+/**
+ * Find the BreadWinner data file in the user's Google Drive.
+ * Returns the file ID if found, null otherwise.
+ */
+const findDataFile = async () => {
+  try {
+    const response = await window.gapi.client.drive.files.list({
+      q: `name='${FILE_NAME}' and trashed=false`,
+      spaces: 'drive',
+      fields: 'files(id, name)',
+    });
+    const files = response.result.files;
+    return files.length > 0 ? files[0].id : null;
+  } catch (error) {
+    console.error('Error finding file:', error);
+    return null;
+  }
+};
+
+/**
+ * Save data to Google Drive.
+ * Creates a new file or updates existing one.
+ */
+export const saveToGoogleDrive = async (data) => {
+  try {
+    const fileId = await findDataFile();
+    const content = JSON.stringify(data, null, 2);
+    const blob = new Blob([content], { type: 'application/json' });
+    
+    const metadata = {
+      name: FILE_NAME,
+      mimeType: 'application/json',
+    };
+
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', blob);
+
+    const token = window.gapi.client.getToken();
+    
+    let response;
+    if (fileId) {
+      // Update existing file
+      response = await fetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token.access_token}` },
+          body: form,
+        }
+      );
+    } else {
+      // Create new file
+      response = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token.access_token}` },
+          body: form,
+        }
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to save to Google Drive');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error saving to Google Drive:', error);
+    throw error;
+  }
+};
+
+/**
+ * Load data from Google Drive.
+ * Returns null if no file exists yet.
+ */
+export const loadFromGoogleDrive = async () => {
+  try {
+    const fileId = await findDataFile();
+    if (!fileId) {
+      return null; // No file exists yet
+    }
+
+    const response = await window.gapi.client.drive.files.get({
+      fileId: fileId,
+      alt: 'media',
+    });
+
+    return response.result;
+  } catch (error) {
+    console.error('Error loading from Google Drive:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete the data file from Google Drive.
+ * Useful for "sign out and clear cloud data" feature.
+ */
+export const deleteFromGoogleDrive = async () => {
+  try {
+    const fileId = await findDataFile();
+    if (!fileId) {
+      return; // No file to delete
+    }
+
+    await window.gapi.client.drive.files.delete({
+      fileId: fileId,
+    });
+  } catch (error) {
+    console.error('Error deleting from Google Drive:', error);
+    throw error;
+  }
+};
