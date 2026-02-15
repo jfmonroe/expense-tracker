@@ -75,6 +75,9 @@ export const AppProvider = ({ children }) => {
   const [theme, setTheme] = useState(
     () => localStorage.getItem(THEME_KEY) || "dark"
   );
+  
+  // Easter egg trigger - counts theme toggles
+  const [themeToggleCount, setThemeToggleCount] = useState(0);
 
   // Tab navigation
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -88,6 +91,7 @@ export const AppProvider = ({ children }) => {
   /** Toggles between dark and light themes */
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setThemeToggleCount((prev) => prev + 1);
   };
 
   // Persist all data to localStorage whenever it changes
@@ -344,6 +348,7 @@ export const AppProvider = ({ children }) => {
         // Theme
         theme,
         toggleTheme,
+        themeToggleCount,
 
         // Navigation
         activeTab,
