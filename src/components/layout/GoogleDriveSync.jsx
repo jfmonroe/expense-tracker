@@ -32,18 +32,25 @@ const GoogleDriveSync = () => {
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
-  const autoSyncEnabled = useRef(false);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
 
   // Auto-sync: save to Drive when data changes (after 3 second debounce)
   useEffect(() => {
-    if (!signedIn || !autoSyncEnabled.current) return;
+    if (!signedIn || !autoSyncEnabled) {
+      console.log('Auto-sync disabled:', { signedIn, autoSyncEnabled });
+      return;
+    }
+
+    console.log('Auto-sync: data changed, will sync in 3 seconds...');
 
     const timeoutId = setTimeout(async () => {
+      console.log('Auto-sync: starting sync now...');
       try {
         setSyncing(true);
         const data = { transactions, budgets, savingsGoals };
         await saveToGoogleDrive(data);
         setLastSync(new Date().toLocaleString());
+        console.log('Auto-sync: success!');
       } catch (error) {
         console.error("Auto-sync error:", error);
       } finally {
@@ -51,8 +58,11 @@ const GoogleDriveSync = () => {
       }
     }, 3000);
 
-    return () => clearTimeout(timeoutId);
-  }, [transactions, budgets, savingsGoals, signedIn]);
+    return () => {
+      console.log('Auto-sync: cancelled (new change detected)');
+      clearTimeout(timeoutId);
+    };
+  }, [transactions, budgets, savingsGoals, signedIn, autoSyncEnabled]);
 
   // Initialize Google Drive API on mount
   useEffect(() => {
@@ -78,11 +88,15 @@ const GoogleDriveSync = () => {
       const email = await getUserEmail();
       setUserEmail(email);
       
+      console.log('Sign in successful, loading data...');
+      
       // Auto-load data after sign in
       await handleLoad(true); // silent = true, no confirmation needed
       
+      console.log('Data loaded, enabling auto-sync...');
+      
       // Enable auto-sync after loading
-      autoSyncEnabled.current = true;
+      setAutoSyncEnabled(true);
     } catch (error) {
       alert("Failed to sign in: " + error.message);
     }
@@ -90,7 +104,8 @@ const GoogleDriveSync = () => {
 
   /** Sign out from Google */
   const handleSignOut = () => {
-    autoSyncEnabled.current = false;
+    console.log('Signing out, disabling auto-sync...');
+    setAutoSyncEnabled(false);
     signOutFromGoogle();
     setSignedIn(false);
     setUserEmail(null);
