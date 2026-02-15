@@ -80,9 +80,19 @@ const GoogleDriveSync = () => {
 
     initGoogleDrive(GOOGLE_CLIENT_ID, GOOGLE_API_KEY, () => {
       setReady(true);
-      setSignedIn(isSignedIn());
-      if (isSignedIn()) {
-        getUserEmail().then(setUserEmail);
+      const alreadySignedIn = isSignedIn();
+      setSignedIn(alreadySignedIn);
+      
+      if (alreadySignedIn) {
+        console.log('Already signed in, getting user email...');
+        getUserEmail().then((email) => {
+          setUserEmail(email);
+          // If already signed in (page refresh), enable auto-sync immediately
+          setAutoSyncEnabled(true);
+          console.log('Auto-sync enabled after refresh');
+        }).catch((error) => {
+          console.error('Error getting user email:', error);
+        });
       }
     });
   }, []);
