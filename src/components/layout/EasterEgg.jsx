@@ -5,19 +5,28 @@ import woodMeme from "/wood-meme.png";
 /**
  * EasterEgg - A hidden surprise for your friends 😏
  * 
- * Shows the wood meme when theme is toggled
+ * Shows the wood meme when theme is toggled OR when Savings tab is clicked
  */
-const EasterEgg = ({ trigger }) => {
+const EasterEgg = ({ trigger, activeTab }) => {
   const [show, setShow] = useState(false);
-  const [hasShown, setHasShown] = useState(false);
+  const [hasShownFromToggle, setHasShownFromToggle] = useState(false);
+  const [hasShownFromSavings, setHasShownFromSavings] = useState(false);
 
+  // Trigger from theme toggle
   useEffect(() => {
-    // Only show once per session when trigger changes
-    if (trigger > 0 && !hasShown) {
+    if (trigger > 0 && !hasShownFromToggle) {
       setShow(true);
-      setHasShown(true);
+      setHasShownFromToggle(true);
     }
-  }, [trigger, hasShown]);
+  }, [trigger, hasShownFromToggle]);
+
+  // Trigger from Savings tab
+  useEffect(() => {
+    if (activeTab === "savings" && !hasShownFromSavings) {
+      setShow(true);
+      setHasShownFromSavings(true);
+    }
+  }, [activeTab, hasShownFromSavings]);
 
   if (!show) return null;
 
