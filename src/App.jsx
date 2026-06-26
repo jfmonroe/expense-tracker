@@ -5,15 +5,7 @@ import TabBar from "./components/common/TabBar";
 import { useApp } from "./context/AppContext";
 import styles from "./App.module.css";
 
-/**
- * App is the root layout for BreadWinner.
- *
- * It renders the header, summary bar, filter bar, tab navigation,
- * and the currently active tab panel. Tab panels are lazy-imported
- * to keep this file clean — each tab has its own component.
- */
-
-// Tab panel components (imported statically for simplicity)
+// Tab panel components
 import ExpenseForm from "./components/expenses/ExpenseForm";
 import ExpenseList from "./components/expenses/ExpenseList";
 import IncomeForm from "./components/income/IncomeForm";
@@ -28,8 +20,12 @@ import GoogleDriveSync from "./components/layout/GoogleDriveSync";
 const App = () => {
   const { activeTab } = useApp();
 
-  // Map each tab ID to its panel content
   const tabPanels = {
+    dashboard: (
+      <>
+        <DashboardPanel />
+      </>
+    ),
     expenses: (
       <>
         <ExpenseList />
@@ -43,7 +39,6 @@ const App = () => {
     recurring: <RecurringPanel />,
     budget: <BudgetPanel />,
     savings: <SavingsPanel />,
-    dashboard: <DashboardPanel />,
   };
 
   return (
